@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+  ============================================================
+  HOW TO ADD YOUR OWN PHOTOS
+  ============================================================
+  1. Create a folder called "images" in the same place as this
+     HTML file.
+  2. Put your photos inside it, e.g. images/1.jpg, images/2.jpg
+  3. Scroll down to the "MEMORIES" array in the <script> at the
+     bottom of this file and change each "src" to match your
+     file names. Change each "caption" to what you want it to say.
+  4. You can add or remove memory entries freely — the page
+     builds itself from that list.
+  5. Open this file in any browser (just double-click it) to
+     preview. No install needed.
+  ============================================================
+-->
+
+<style>
+  :root{
+    --ink: #241633;
+    --panel: #34213f;
+    --rose: #e3a58a;
+    --rose-dim: #c98a6f;
+    --cream: #f6ede3;
+    --lilac: #b6a2c9;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior: smooth; }
+
+  body{
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  .voice{ font-family: 'Fraunces', serif; }
+
+  /* ---------- thread ---------- */
+
+  #thread-wrap{
+    position:absolute;
+    top:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:2px;
+    height:100%;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  #thread-wrap svg{
+    position:absolute;
+    top:0;
+    left:0;
+    overflow:visible;
+  }
+
+  #thread-path{
+    fill:none;
+    stroke:var(--rose-dim);
+    stroke-width:2;
+    stroke-linecap:round;
+  }
+
+  /* ---------- hero ---------- */
+
+  .hero{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:2rem;
+    position:relative;
+    z-index:2;
+  }
+
+  .hero .eyebrow,
+  .hero h1,
+  .hero p,
+  .scroll-cue{
+    position:relative;
+    z-index:3;
+    background:var(--ink);
+    display:inline-block;
+    padding:0.35rem 0.8rem;
+  }
+
+  .hero .eyebrow{
+    font-size:.8rem;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    color:var(--lilac);
+    margin-bottom:1.25rem;
+  }
+
+  .hero h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size:clamp(2.5rem,8vw,5rem);
+    line-height:1.05;
+    max-width:16ch;
+  }
+
+  .hero h1 em{
+    font-style:italic;
+    color:var(--rose);
+    font-weight:400;
+  }
+
+  .hero p{
+    margin-top:1.5rem;
+    color:var(--lilac);
+    font-size:1.05rem;
+    max-width:32ch;
+  }
+
+  .scroll-cue{
+    margin-top:4rem;
+    font-size:.75rem;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--lilac);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:.5rem;
+    opacity:.8;
+  }
+
+  .scroll-cue .line{
+    width:1px;
+    height:32px;
+    background:var(--lilac);
+    animation:drop 1.8s ease-in-out infinite;
+  }
+
+  @keyframes drop{
+    0%{transform:scaleY(0);transform-origin:top;}
+    50%{transform:scaleY(1);transform-origin:top;}
+    51%{transform:scaleY(1);transform-origin:bottom;}
+    100%{transform:scaleY(0);transform-origin:bottom;}
+  }
+
+  /* ---------- memories ---------- */
+
+  #memories{
+    position:relative;
+    z-index:2;
+    padding:4rem 1.5rem 6rem;
+    max-width:900px;
+    margin:0 auto;
+  }
+
+  .memory{
+    display:flex;
+    align-items:center;
+    gap:3rem;
+    margin-bottom:8rem;
+    opacity:0;
+    transform:translateY(40px);
+    transition:opacity .9s ease, transform .9s ease;
+  }
+
+  .memory.visible{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  .memory:nth-child(even){
+    flex-direction:row-reverse;
+  }
+
+  .memory .frame{
+    flex:0 0 auto;
+    background:var(--cream);
+    padding:14px 14px 44px;
+    border-radius:3px;
+    width:min(280px,42vw);
+    transform:rotate(-2deg);
+    position:relative;
+    z-index:3;
+  }
+
+  .memory:nth-child(even) .frame{
+    transform:rotate(2deg);
+  }
+
+  .memory .photo{
+    width:100%;
+    aspect-ratio:4/5;
+    object-fit:cover;
+    display:block;
+    background:var(--panel);
+  }
+
+  .memory .placeholder{
+    width:100%;
+    aspect-ratio:4/5;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:.6rem;
+    background:linear-gradient(160deg,var(--panel),#2b1a37);
+    color:var(--lilac);
+    font-size:.75rem;
+    text-align:center;
+    padding:1rem;
+  }
+
+  .memory .placeholder svg{
+    width:34px;
+    height:34px;
+    opacity:.6;
+  }
+
+  .memory .text{
+    flex:1 1 auto;
+    min-width:0;
+    position:relative;
+    z-index:3;
+    background:var(--ink);
+    display:inline-block;
+    padding:.6rem 1rem;
+  }
+
+  .memory .index{
+    font-size:.75rem;
+    letter-spacing:.15em;
+    color:var(--rose);
+    text-transform:uppercase;
+    margin-bottom:.75rem;
+    display:block;
+  }
+
+  .memory .caption{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:500;
+    font-size:clamp(1.3rem,3vw,1.7rem);
+    line-height:1.4;
+    color:var(--cream);
+  }
+
+  @media (max-width:640px){
+
+    .memory,
+    .memory:nth-child(even){
+      flex-direction:column;
+      text-align:center;
+      gap:1.5rem;
+    }
+
+    .memory .frame{
+      width:min(280px,70vw);
+    }
+  }
+
+ /* ---------- closing ---------- */
+
+.closing{
+  position:relative;
+  z-index:2;
+  min-height:90vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:3rem 2rem;
+}
+
+.closing h2,
+.closing .signoff{
+  position:relative;
+  z-index:3;
+  background:var(--ink);
+  display:inline-block;
+  padding:.35rem .8rem;
+}
+
+.closing h2{
+  font-family:'Fraunces', serif;
+  font-weight:500;
+  font-size:clamp(2rem,6vw,3.2rem);
+  max-width:18ch;
+}
+
+.closing .signoff{
+  margin-top:1.75rem;
+  color:var(--lilac);
+  font-size:1rem;
+  max-width:34ch;
+}
+
+/* Heart perfectly centered on the thread */
+.closing .heart{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:3.5rem;      /* Adjust if needed */
+  width:20px;
+  height:20px;
+  color:var(--rose);
+  z-index:4;
+  background:var(--ink);
+  padding:5px;
+  box-sizing:content-box;
+}
+</style>
+</head>
+<body>
+
+<div id="thread-wrap">
+  <svg width="2" height="100%" preserveAspectRatio="none">
+    <path id="thread-path" d="M1,0 L1,10000" pathLength="1000"></path>
+  </svg>
+</div>
+
+<section class="hero">
+  <span class="eyebrow">Girlfriend's day</span>
+  <h1>Every little moment<br>with <em>you</em></h1>
+  <p>A small scroll through some of my favourite memories of us. Keep going.</p>
+  <div class="scroll-cue"><span class="line"></span>scroll</div>
+</section>
+
+<section id="memories"></section>
+
+<section class="closing">
+  <h2 class="voice">Here's to many more moments like these.</h2>
+  <p class="signoff">Happy Girlfriend's Day. I love you.</p>
+  <svg class="heart" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-10-9.2C.3 8.1 2 4.5 5.6 4.5c2 0 3.4 1 4.9 2.7 1.5-1.7 2.9-2.7 4.9-2.7 3.6 0 5.3 3.6 3.6 7.3C19.5 16.4 12 21 12 21z"/></svg>
+</section>
+
+<script>
+  /* ============================================================
+     EDIT THIS LIST — one entry per photo.
+     src: the path to your image file (see instructions at the
+          top of this file for where to put your photos)
+     caption: whatever you want written on/under that photo
+     ============================================================ */
+  const MEMORIES = [
+    { src: "img1.jpg", caption: "The day it all started." },
+    { src: "img2.jpg", caption: "Still my favourite kind of afternoon." },
+    { src: "img3.jpg", caption: "You looked beautiful without even trying." },
+    { src: "img4.jpg", caption: "This one lives in my head rent free." },
+    { src: "img5.jpg", caption: "A good drink and an even better smile." },
+    { src: "img6.jpg", caption: "Every trip is better with you in it." },
+    { src: "img7.jpg", caption: "Proof I can occasionally take a decent photo of you." },
+    { src: "img8.jpg", caption: "Just us, being us." },
+  ];
+
+  const container = document.getElementById('memories');
+
+  MEMORIES.forEach((mem, i) => {
+    const num = String(i + 1).padStart(2, '0');
+    const el = document.createElement('div');
+    el.className = 'memory';
+    el.innerHTML = `
+      <div class="frame">
+        <img class="photo" src="${mem.src}" alt="Memory ${num}"
+             onerror="this.replaceWith(Object.assign(document.createElement('div'), {
+               className: 'placeholder',
+               innerHTML: '<svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.5&quot;><rect x=&quot;3&quot; y=&quot;6&quot; width=&quot;18&quot; height=&quot;14&quot; rx=&quot;2&quot;/><circle cx=&quot;12&quot; cy=&quot;13&quot; r=&quot;3.5&quot;/><path d=&quot;M8 6l1.5-2h5L16 6&quot;/></svg><span>drop \`${mem.src}\` next to this file</span>'
+             }))">
+      </div>
+      <div class="text">
+        <span class="index">Chapter ${num}</span>
+        <p class="caption voice">${mem.caption}</p>
+      </div>
+    `;
+    container.appendChild(el);
+  });
+
+  /* fade memories in as they scroll into view */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.25 });
+  document.querySelectorAll('.memory').forEach(m => io.observe(m));
+
+  /* draw the thread down the page as you scroll */
+  const path = document.getElementById('thread-path');
+  const svgWrap = document.getElementById('thread-wrap');
+  function sizeThread(){
+    const h = document.body.scrollHeight;
+    svgWrap.style.height = h + 'px';
+    path.setAttribute('d', `M1,0 L1,${h}`);
+  }
+  function updateThread(){
+    const scrolled = window.scrollY + window.innerHeight * 0.6;
+    const total = document.body.scrollHeight;
+    const pct = Math.min(1, Math.max(0, scrolled / total));
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len * (1 - pct);
+  }
+  window.addEventListener('load', () => { sizeThread(); updateThread(); });
+  window.addEventListener('resize', () => { sizeThread(); updateThread(); });
+  window.addEventListener('scroll', updateThread);
+</script>
+
+</body>
+</html>
